@@ -1,0 +1,96 @@
+class Solution(object):
+    def minAbsDifference(self, nums, goal):
+        """
+        :type nums: List[int]
+        :type goal: int
+        :rtype: int
+        """
+#         # dfs[i, j] denotes the minimum possible distance  with sum of subsequence of nums[:i] = j
+#         # O(2^N)
+#         def dfs(idx, total):
+#             if idx == n:
+#                 return abs(total - goal)
+#             return min(dfs(idx + 1, total), dfs(idx + 1, total + nums[idx]))
+
+#         n = len(nums)
+#         return dfs(0, 0)
+
+        # # say f(i) denotes the all possible sum of subsequence for nums[:i+1] ending at nums[i]
+        # # then len(f(i)) = len(f(i - 1)) + 1, hence len(f(n - 1)) <= n + 1
+        # # maintain two priority pq_lo and pq_hi, where pq_hi is a min heap storing possible sum > goal
+        # # and pq_lo is a max heap storing possible sum < goal
+        # # for nums[i], iterate all possible sum and increment by nums[i], and add a new item nums[i]
+        # # then find min(abs(pq_lo[0] - goal), abs(pq_hi[0] - goal)) is a candidate for subsequences ending at nums[i]
+        # # O(2^N), each possible sum is pushed into heap once, f(i) <= g(i-1) + 1, g(i) <= f(i) + g(i-1), where f(i) denotes the number of possible sums of subsequences ending with nums[i], and g(i) denotes the number of possible sums of subsequences within nums[:i]. f(0) = 1, and g(0) = 1
+        # # hence g(n) <= f(n) + f(n-1) + ... + f(0) <= O(n^2)
+        # if goal == 0:
+        #     return 0
+        # ans = abs(goal)
+        # sums = [0]
+        # for num in nums:
+        #     if num == goal:
+        #         return 0
+        #     pq_lo = [-num] if num < goal else []  # max heap for sum < goal
+        #     pq_hi = [num] if num > goal else []  # min heap for sum > goal
+        #     size = len(sums)
+        #     for i in range(size):
+        #         if sums[i] + num < goal:
+        #             heapq.heappush(pq_lo, -sums[i] - num)
+        #         elif sums[i] + num > goal:
+        #             heapq.heappush(pq_hi, sums[i] + num)
+        #         else:
+        #             return 0
+        #         sums.append(sums[i] + num)
+        #     if pq_lo:
+        #         ans = min(ans, abs(-pq_lo[0] - goal))
+        #     if pq_hi:
+        #         ans = min(ans, abs(pq_hi[0] - goal))
+        # return ans
+        
+        # O(2^N)
+        # if goal == 0:
+        #     return 0
+        # ans = abs(goal)
+        # sums = {0}
+        # for num in nums:
+        #     if num == goal:
+        #         return 0
+        #     nx_sums = {num}
+        #     cur = abs(num - goal)
+        #     for i in sums:
+        #         nx_sums.add(i + num)
+        #         cur = min(cur, abs(i + num - goal))
+        #     ans = min(ans, cur)
+        #     sums |= nx_sums
+        # return ans
+        
+        # O(N2^(N/2))
+        def possible_sum(arr, target):
+            res = {0}
+            for a in arr:
+                nx = {a}
+                for i in res:
+                    if i + a == target:
+                        return [], True
+                    nx.add(i + a)
+                res |= nx
+            return res, False
+
+        if goal == 0:
+            return 0
+        n = len(nums)
+        lo, ans0 = possible_sum(nums[:(n // 2)], goal)
+        if ans0:
+            return 0
+        hi, ans1 = possible_sum(nums[(n // 2):], goal)
+        if ans1:
+            return 0
+        hi = sorted(list(hi))
+        ans = abs(goal)
+        n_hi = len(hi)
+        for num in lo:
+            i = bisect.bisect_left(hi, goal - num)
+            if i < n_hi and hi[i] == goal - num:
+                return 0
+            ans = min(ans, min(goal - num - hi[i - 1] if i else ans, num + hi[i] - goal if i < n_hi else ans))
+        return ans
