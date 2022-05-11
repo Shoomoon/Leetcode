@@ -1,0 +1,80 @@
+class Solution(object):
+    def getCoprimes(self, nums, edges):
+        """
+        :type nums: List[int]
+        :type edges: List[List[int]]
+        :rtype: List[int]
+        """
+#         # O(N^2 * logM)
+#         def gcd(x, y):
+#             if y == 0:
+#                 return x
+#             return gcd(y, x % y)
+
+#         def find(i):  # O(NlogM)
+#             ancestor = parent[i]
+#             while ancestor >= 0 and gcd(nums[ancestor], nums[i]) > 1:
+#                 ancestor = parent[ancestor]
+#             return ancestor
+
+#         graph = collections.defaultdict(list)
+#         for a, b in edges:
+#             graph[a].append(b)
+#             graph[b].append(a)
+#         depth = [-1] * len(nums)
+#         parent = [-1] * len(nums)
+#         depth[0] = 0
+#         q = collections.deque([[0, 0]])
+#         while q:
+#             node, d = q.popleft()
+#             for child in graph[node]:
+#                 if depth[child] < 0:
+#                     depth[child] = d + 1
+#                     q.append([child, d + 1])
+#                     parent[child] = node
+#         return [find(i) for i in range(len(nums))]
+
+        # O(NM)
+        def gcd(x, y):
+            if y == 0:
+                return x
+            return gcd(y, x % y)
+
+        def find(node):
+            anc = d = -1
+            for i in range(1, mx_num + 1):
+                if ancestors[i] >= 0 and coprimes[min(i, nums[node])][max(i, nums[node])] and depth[ancestors[i]] > d:
+                    anc, d = ancestors[i], depth[ancestors[i]]
+            ans[node] = anc
+
+            tmp = ancestors[nums[node]]
+            ancestors[nums[node]] = node
+            for child in graph[node]:
+                if depth[child] > depth[node]:
+                    find(child)
+            ancestors[nums[node]] = tmp
+        graph = collections.defaultdict(list)
+        for a, b in edges:
+            graph[a].append(b)
+            graph[b].append(a)
+        n = len(nums)
+        depth = [-1] * n
+        depth[0] = 0
+        q = collections.deque([[0, 0]])
+        while q:
+            node, d = q.popleft()
+            for child in graph[node]:
+                if depth[child] < 0:
+                    depth[child] = d + 1
+                    q.append([child, d + 1])
+        mx_num = max(nums)
+        coprimes = [[True] * (mx_num + 1) for _ in range(mx_num + 1)]
+        for i in range(2, mx_num + 1):
+            coprimes[i][i] = False
+            for j in range(i + 1, mx_num + 1):
+                if gcd(j, i) > 1:
+                    coprimes[i][j] = False
+        ans = [-1] * n
+        ancestors = [-1] * (mx_num + 1)
+        find(0)
+        return ans
