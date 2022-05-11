@@ -1,0 +1,59 @@
+class Solution(object):
+    def getCollisionTimes(self, cars):
+        """
+        :type cars: List[List[int]]
+        :rtype: List[float]
+        """
+        # # ans[i] = min((cars[j][0] - cars[i][0]) / (cars[i][1] - cars[j][1]) for any j > i if cars[j][1] < cars[i][1])
+        # # O(N^2)
+        # n = len(cars)
+        # ans = [-1] * n
+        # for i in range(n - 2, -1, -1):
+        #     for j in range(i + 1, n):
+        #         if cars[j][1] < cars[i][1]:
+        #             t = (cars[j][0] - cars[i][0]) / (cars[i][1] - cars[j][1])
+        #             if ans[i] < 0 or t < ans[i]:
+        #                 ans[i] = t
+        # return ans
+        
+        
+        # # O(N^2)
+        # # answer for i-th car has nothing to do with cars to the left, so we calculate from right to left
+        # # for i-th car, all cars to the right having higher speed must not be the minimum candidate for cars to the left of i, so we just pop them
+        # # now we have an array cars with decreasing speed
+        # # say dp[j] denotes the car that j-th car will collide with, and dp[j] = -1 means will not collide with any car
+        # # for i-th car,  say j = sta[-1]. if ans[j] == -1, then i-th car will collide with j-th car
+        # # if ans[j] <= time(i, j), then we search for j = dp[j]
+        # n = len(cars)
+        # ans = [-1] * n
+        # sta = [n - 1]
+        # for i in range(n - 2, -1, -1):
+        #     while sta and cars[sta[-1]][1] >= cars[i][1]:
+        #         sta.pop()
+        #     if sta:
+        #         j = sta[-1]
+        #         while ans[j] >= 0:
+        #             k = ans[j]
+        #             if (cars[k][0] - cars[j][0]) * (cars[i][1] - cars[j][1]) < (cars[j][1] - cars[k][1]) * (cars[j][0] - cars[i][0]):
+        #                 j = k
+        #             else:
+        #                 break
+        #         ans[i] = j
+        #     sta.append(i)
+        # return [(cars[j][0] - cars[i][0]) * 1.0 / (cars[i][1] - cars[j][1]) if j >= 0 else -1 for i, j in enumerate(ans)]
+
+        # if ans[j] > time(i, j), then i will collide with j first
+        # if ans[j] <= time(i, j), and j will collide with k, then i will collides with k, so ans[i] > ans[j]. And cars to the left of i will collides with j, but i or k, because if time(l, i) < ans[i], l will collide with i first
+        # if time(l, i) > ans[i] > ans[j], then l will collide with k. Hence j will not be candidate any more, so we just pop it
+        # O(N)
+        n = len(cars)
+        ans = [-1] * n
+        sta = [n - 1]
+        for i in range(n - 2, -1, -1):
+            p, s = cars[i]
+            while sta and (cars[sta[-1]][1] >= s or (cars[sta[-1]][0] - p) * 1.0 / (s - cars[sta[-1]][1]) >= ans[sta[-1]] > 0):
+                sta.pop()
+            if sta:
+                ans[i] = (cars[sta[-1]][0] - p) * 1.0 / (s - cars[sta[-1]][1])
+            sta.append(i)
+        return ans
