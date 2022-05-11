@@ -1,0 +1,54 @@
+class Solution(object):
+    def minChanges(self, nums, k):
+        """
+        :type nums: List[int]
+        :type k: int
+        :rtype: int
+        """
+        # # to make all segment's xor == 0, we just need to change element so that
+        # # xor(nums[:k]) == 0, and nums[i] = nums[i + k] = nums[i + 2k] ...
+        # # dp[i, j] denotes the number of elements change needed to make xor(nums[:i]) = j
+        # # then dp[i, j] = min(dp[i - 1, t] + change(i - 1, t ^ j))
+        # # change(i0, val) denotes the number of changes to change all element at i0 + k * t position to val
+        # # change(i0, val) = (number of elements in position i0 + k * t) - (number of elements == val in that position)
+        # # i0 + k * t <= n - 1, so t = (n - 1 - i0) // k, and the number of elements in i0 position will be t + 1
+        # O(KM^2) where M is the size of possible value
+        # def change(i0, val):
+        #     return (n - 1 - i0) // k + 1 - count[i0].get(val, 0)
+        # n = len(nums)
+        # size = 2 ** (len(bin(max(nums))) - 2)
+        # dp = [[n] * size for _ in range(k + 1)]
+        # dp[0][0] = 0
+        # count = [collections.defaultdict(int) for _ in range(k)]
+        # for i, num in enumerate(nums):
+        #     count[i % k][num] += 1
+        # for i in range(1, k + 1):
+        #     for j in range(size):
+        #         dp[i][j] = min(dp[i - 1][t] + change(i - 1, t ^ j) for t in range(size))
+        # return dp[-1][0]
+        
+        
+        # we prefer change element to val that exist in that position to minimize the number of changes
+        # so we iterate all possible values in that position
+        # and since we change elements at most (n - 1 - i) // k + 1 times, the lower bound will be (best answer of dp[i - 1]) + (n - 1 - i) // k + 1
+        def change(i0, val):
+            return (n - 1 - i0) // k + 1 - count[i0].get(val, 0)
+        
+        n = len(nums)
+        size = 2 ** (len(bin(max(nums))) - 2)
+        dp = [[n] * size for _ in range(k + 1)]
+        dp[0][0] = 0
+        count = [collections.defaultdict(int) for _ in range(k)]
+        elements = [set() for _ in range(k)]
+        for i, num in enumerate(nums):
+            count[i % k][num] += 1
+            elements[i % k].add(num)
+        best = 0
+        for i in range(1, k + 1):
+            bestAti = n
+            for j in range(size):
+                dp[i][j] = min(dp[i - 1][t ^ j] + change(i - 1, t) for t in elements[i - 1])
+                dp[i][j] = min(dp[i][j], best + (n - i) // k + 1)
+                bestAti = min(bestAti, dp[i][j])
+            best = bestAti
+        return dp[-1][0]
