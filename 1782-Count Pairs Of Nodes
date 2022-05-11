@@ -1,0 +1,46 @@
+class Solution(object):
+    def countPairs(self, n, edges, queries):
+        """
+        :type n: int
+        :type edges: List[List[int]]
+        :type queries: List[int]
+        :rtype: List[int]
+        """
+        # incident(a, b) = edge(a) + edge(b) - edge_cnt(a, b)
+        # if we sort nodes by its number of edges, then for each query, as index(a) going right, index(b) keep going left, so for any queries[i], we could find the number of pairs (a, b) so that a < b and edge(a) + edge(b) > querries[i]
+        # then we just iterate all edges for any query and decreament by 1 if incident(a, b) = edge(a) + edge(b) - edge_cnt(a, b) <= query < edge(a) + edge(b)
+        # O(E + VlogV + VQ + EQ)
+        graph_cnt = collections.defaultdict(int)
+        edge_cnt = collections.defaultdict(int)
+        edge_set = set()
+        for a, b in edges:
+            if a > b:
+                a, b = b, a
+            edge_set.add((a, b))
+            graph_cnt[a] += 1
+            graph_cnt[b] += 1
+            edge_cnt[(a, b)] += 1
+        connect_nodes = [graph_cnt.get(i, 0) for i in range(n + 1)]
+        connect_nodes.sort()
+        ans = [0] * len(queries)
+        for i in range(len(queries)):
+            j0, count = n, 0
+            for i0 in range(1, n):
+                j0 = max(j0, i0 + 1)
+                while j0 > i0 and connect_nodes[i0] + connect_nodes[j0] > queries[i]:
+                    j0 -= 1
+                count += n - j0
+            ans[i] = count
+        visited = set()
+        for a, b in edges:
+            if a > b:
+                a, b = b, a
+            if (a, b) in visited:
+                continue
+            visited.add((a, b))
+            before = graph_cnt[a] + graph_cnt[b]
+            after = before - edge_cnt[(a, b)]
+            for i, q in enumerate(queries):
+                if after <= q < before:
+                    ans[i] -= 1
+        return ans
